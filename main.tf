@@ -7,8 +7,8 @@ locals {
     Env       = "${var.project_env}"
     Namespace = "${var.namespace}"
   }
-  temp_file_assumerole  = "${var.temp_file_assumerole == "" ? "../AssumeRoleService.json.tpl" : var.temp_file_assumerole }"
-  temp_file_policy      = "${var.temp_file_policy == "" ? "../Policy.json.tpl" : var.temp_file_policy }"
+  temp_file_assumerole  = "${var.temp_file_assumerole == "" ? "AssumeRoleService.json.tpl" : var.temp_file_assumerole }"
+  temp_file_policy      = "${var.temp_file_policy == "" ? "Policy.json.tpl" : var.temp_file_policy }"
   trust_identifiers     = [ "${split(",", var.ssm_enabled ? join(",",list("ec2.amazonaws.com","ssm.amazonaws.com")) : join(",", list("ec2.amazonaws.com")))}" ]
   iam_role_service_name = "${var.namespace == "" ? "" : "${lower(var.namespace)}-"}${lower(var.project_env_short)}-service-${lower(var.name)}"
   iam_role_ec2_name     = "${var.namespace == "" ? "" : "${lower(var.namespace)}-"}${lower(var.project_env_short)}-ec2-${lower(var.name)}"
