@@ -1,6 +1,5 @@
 provider "aws" {
   region  = "${var.aws_region}"
-  profile = "${var.aws_profile}"
 }
 
 locals {
@@ -8,8 +7,8 @@ locals {
     Env       = "${var.project_env}"
     Namespace = "${var.namespace}"
   }
-  temp_file_assumerole  = "${var.temp_file_assumerole == "" ? "AssumeRoleService.json.tpl" : var.temp_file_assumerole }"
-  temp_file_policy      = "${var.temp_file_policy == "" ? "Policy.json.tpl" : var.temp_file_policy }"
+  temp_file_assumerole  = "${var.temp_file_assumerole == "" ? "../AssumeRoleService.json.tpl" : var.temp_file_assumerole }"
+  temp_file_policy      = "${var.temp_file_policy == "" ? "../Policy.json.tpl" : var.temp_file_policy }"
   trust_identifiers     = [ "${split(",", var.ssm_enabled ? join(",",list("ec2.amazonaws.com","ssm.amazonaws.com")) : join(",", list("ec2.amazonaws.com")))}" ]
   iam_role_service_name = "${var.namespace == "" ? "" : "${lower(var.namespace)}-"}${lower(var.project_env_short)}-service-${lower(var.name)}"
   iam_role_ec2_name     = "${var.namespace == "" ? "" : "${lower(var.namespace)}-"}${lower(var.project_env_short)}-ec2-${lower(var.name)}"
@@ -28,7 +27,7 @@ data "template_file" "service" {
 
 resource "aws_iam_role" "service" {
   count              = "${var.service_name == "" ? 1 : 0 }"
-  name               = "${lower(var.iam_role_service_name)}"
+  name               = "${local.iam_role_service_name}"
   assume_role_policy = "${data.template_file.service.rendered}"
   tags               = "${merge(var.tags, local.common_tags)}"
 }
@@ -71,14 +70,14 @@ resource "aws_iam_role_policy_attachment" "elastic_beanstalk_multi_container_doc
 
 resource "aws_iam_role" "ec2" {
   count              = "${var.iam_instance_profile == "" ? 1 : 0}"
-  name               = "${var.iam_role_ec2_name}"
+  name               = "${local.iam_role_ec2_name}"
   assume_role_policy = "${data.template_file.ec2.rendered}"
   tags               = "${merge(var.tags, local.common_tags)}"
 }
 
 resource "aws_iam_role_policy" "default" {
   count  = "${var.iam_instance_profile == "" ? 1 : 0}"
-  name   = "${var.iam_role_ec2_name}"
+  name   = "${local.iam_role_ec2_name}"
   role   = "${aws_iam_role.ec2.id}"
   policy = "${data.template_file.default.rendered}"
 }
@@ -125,13 +124,13 @@ resource "aws_iam_role_policy_attachment" "ecr-readonly" {
 
 resource "aws_ssm_activation" "ec2" {
   count              = "${var.iam_instance_profile == "" && var.ssm_enabled ? 1 : 0}"
-  name               = "${var.iam_role_ec2_name}"
+  name               = "${local.iam_role_ec2_name}"
   iam_role           = "${aws_iam_role.ec2.id}"
   registration_limit = "${var.ssm_registration_limit}"
 }
 
 resource "aws_iam_instance_profile" "ec2" {
   count = "${var.iam_instance_profile == "" ? 1 : 0}"
-  name  = "${var.iam_role_ec2_name}"
+  name  = "${local.iam_role_ec2_name}"
   role  = "${aws_iam_role.ec2.name}"
 }
