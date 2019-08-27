@@ -5,5 +5,5 @@ output "iam_instance_profile" {
 
 output "service_name" {
   description = "The service role name of created service_name"
-  value       = "${element(concat(aws_iam_instance_profile.ec2.*.name,list("")),0)}"
+  value       = "${element(concat(aws_iam_role.service.*.name,list("")),0)}"
 }
