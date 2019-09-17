@@ -58,8 +58,9 @@ data "template_file" "ec2" {
 data "template_file" "default" {
   count    = "${var.iam_instance_profile == "" ? 1 : 0}"
   template = "${file(local.temp_file_policy)}"
-  //vars {
-  //}
+  vars {
+    policy_resources = "${jsonencode(var.policy_resources)}"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "elastic_beanstalk_multi_container_docker" {
